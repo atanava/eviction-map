@@ -1,11 +1,8 @@
 package com.atanava.evictionmap;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,18 +10,11 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(TimingExtension.class)
-class EvictionMapTest {
+abstract class AbstractEvictionMapTest {
 
-    private EvictionMap<Integer, String> evictionMap;
-    private long lifeTimeMillis;
-    private String expected;
-
-    @BeforeEach
-    void init() {
-        lifeTimeMillis = 10_000;
-        evictionMap = new EvictionMap<>(lifeTimeMillis, true, 1000);
-        expected = "Item ";
-    }
+    protected EvictionMap<Integer, String> evictionMap;
+    protected long lifeTimeMillis = 10_000;
+    protected String expected = "Item ";;
 
     @Test
     void putAndGetOnce() throws InterruptedException {
@@ -34,10 +24,6 @@ class EvictionMapTest {
         assertNull(evictionMap.get(1));
     }
 
-    @Test
-    void frequentPutAndGetMultiThreaded() {
-
-    }
 
     @Test
     void frequentPutAndGet() throws InterruptedException {
