@@ -1,27 +1,25 @@
 package com.atanava.evictionmap;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class EvictionMap<K, V> {
 
     private final Map<K, CompositeValue> innerMap;
     private final Deque<CompositeKey> keysByAddingOrder;
     private final long entryLifeTime;
-    private final ChronoUnit chronoUnit;
     private final boolean isMultiThreaded;
-    private final AtomicInteger counter = new AtomicInteger(0);
-    private final int evictionBatchSize;
+    private final int batchSize;
+    private final AtomicReference<Date> lastEvicted;
 
-    public EvictionMap(long entryLifeTime, ChronoUnit chronoUnit, boolean isMultiThreaded, int evictionBatchSize) {
+    public EvictionMap(long entryLifeTime, boolean isMultiThreaded, int batchSize) {
         this.entryLifeTime = entryLifeTime;
-        this.chronoUnit = chronoUnit;
         this.isMultiThreaded = isMultiThreaded;
-        this.evictionBatchSize = evictionBatchSize;
+        this.batchSize = batchSize;
+        this.lastEvicted = new AtomicReference<>(new Date());
+
         if (isMultiThreaded) {
             this.innerMap = new ConcurrentHashMap<>();
             this.keysByAddingOrder = new ConcurrentLinkedDeque<>();
@@ -39,57 +37,66 @@ public class EvictionMap<K, V> {
     }
 
     public void put(K key, V value) {
-        LocalDateTime now = LocalDateTime.now();
+        Date now = new Date();
         CompositeValue compositeValue = new CompositeValue(now, value);
         CompositeKey compositeKey = new CompositeKey(now, key);
+
         innerMap.put(key, compositeValue);
         keysByAddingOrder.addLast(compositeKey);
 
-        int count = counter.incrementAndGet();
-
-        if (!isMultiThreaded && count >= evictionBatchSize) {
+        if (!isMultiThreaded && keysByAddingOrder.size() >= batchSize) {
             evictCache();
         }
     }
 
     public V get(K key) {
-        return innerMap.get(key).inserted.plus(entryLifeTime, chronoUnit).isAfter(LocalDateTime.now())
-                ? innerMap.get(key).value
-                : null;
+        if (!isMultiThreaded && keysByAddingOrder.size() >= batchSize) {
+            evictCache();
+        }
+
+        CompositeValue compositeValue = innerMap.get(key);
+        if (compositeValue != null && (new Date().getTime() - compositeValue.inserted.getTime()) < entryLifeTime) {
+            return compositeValue.value;
+        }
+        return null;
     }
 
     private void evictCache() {
-        Iterator<CompositeKey> iterator = keysByAddingOrder.iterator();
-        while (iterator.hasNext()) {
-            CompositeKey next = iterator.next();
-            if (next.inserted.plus(entryLifeTime, chronoUnit).isBefore(LocalDateTime.now())) {
-                iterator.remove();
 
-                K key = next.key;
-                if (innerMap.get(key).inserted.plus(entryLifeTime, chronoUnit).isBefore(LocalDateTime.now())) {
-                    innerMap.remove(key);
-                    counter.decrementAndGet();
-                }
-            } else break;
+        if ((new Date().getTime() - lastEvicted.get().getTime()) >= entryLifeTime) {
+            Iterator<CompositeKey> iterator = keysByAddingOrder.iterator();
+            while (iterator.hasNext()) {
+                CompositeKey next = iterator.next();
+                Date now = new Date();
+                if ((now.getTime() - next.inserted.getTime()) >= entryLifeTime) {
+                    iterator.remove();
+
+                    K key = next.key;
+                    if ((now.getTime() - innerMap.get(key).inserted.getTime()) >= entryLifeTime) {
+                        innerMap.remove(key);
+                    }
+                } else break;
+            }
+
+            lastEvicted.set(new Date());
         }
-
     }
 
     private class CompositeValue {
-        private final LocalDateTime inserted;
+        private final Date inserted;
         private final V value;
 
-        CompositeValue(LocalDateTime inserted, V value) {
+        CompositeValue(Date inserted, V value) {
             this.inserted = inserted;
             this.value = value;
         }
     }
 
     private class CompositeKey {
-        private final LocalDateTime inserted;
+        private final Date inserted;
         private final K key;
 
-        private CompositeKey(LocalDateTime inserted, K key) {
+        private CompositeKey(Date inserted, K key) {
             this.inserted = inserted;
             this.key = key;
         }
@@ -98,8 +105,8 @@ public class EvictionMap<K, V> {
     private class Cleaner implements Runnable {
         @Override
         public void run() {
-            while (! Thread.currentThread().isInterrupted()) {
-                if (counter.get() >= evictionBatchSize) {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (keysByAddingOrder.size() >= batchSize) {
                     evictCache();
                 }
             }
