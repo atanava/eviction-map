@@ -1,53 +1,106 @@
 package com.atanava.evictionmap;
 
+import com.atanava.evictionmap.helpers.TimingExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(TimingExtension.class)
 abstract class EvictionMapAbstractTest {
 
+    private static final Logger log = LoggerFactory.getLogger("console");
+
     protected EvictionMapFactory<Integer, String> factory = new EvictionMapFactory<>();
     protected EvictionMap<Integer, String> evictionMap;
-    protected long lifeTimeMillis = 10_000;
+    protected long lifeTimeMillis = 2_000;
+    protected int batchSize = 10_000_000;
     protected String expected = "Item ";
+    Runtime runtime = Runtime.getRuntime();
 
     @Test
     void putAndGetOnce() throws InterruptedException {
         evictionMap.put(1, expected);
         assertEquals(expected, evictionMap.get(1));
-        Thread.sleep(10_000);
+        Thread.sleep(lifeTimeMillis);
         assertNull(evictionMap.get(1));
     }
 
 
     @Test
     void frequentPutAndGet() throws InterruptedException {
-        Map<Integer, Date> timeMap = new HashMap<>();
-        int batchSize = 1_000_000;
-
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
         for (int i = 0; i < batchSize; i++) {
             evictionMap.put(i, expected + i);
-            timeMap.put(i, new Date()); //Time of this Date is approximate, accuracy depends on how EvictionMap works
+            evictionMap.get(i);
         }
 
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
         Thread.sleep(lifeTimeMillis);
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
 
-        int found = 0;
         for (int i = 0; i < batchSize; i++) {
-            evictionMap.put(i + batchSize, expected + i + batchSize);
-            if (new Date().getTime() - timeMap.get(i).getTime() < lifeTimeMillis) {
-                assertEquals(expected + i, evictionMap.get(i));
-            } else {
-                assertNull(evictionMap.get(i));
-            }
-            found++;
+            int j = i + batchSize;
+            evictionMap.put(j, expected + j);
+
+            assertNull(evictionMap.get(i));
+            assertEquals(expected + j, evictionMap.get(j));
         }
-        assertEquals(batchSize, found);
+        log.info('\n' + "megaBytesBefore = " + megaBytesBefore + '\n'
+                + "megaBytesAfterPopulating = " + megaBytesAfterPopulating + '\n'
+                + "megaBytesAfterEviction = " + megaBytesAfterEviction);
     }
+
+    @Test
+    void frequentPutAndRarelyGet() throws InterruptedException {
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        for (int i = 0; i < batchSize; i++) {
+            evictionMap.put(i, expected + i);
+        }
+
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        Thread.sleep(lifeTimeMillis);
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+
+        for (int i = 0; i < batchSize; i++) {
+            int j = i + batchSize;
+            evictionMap.put(j, expected + j);
+
+            assertNull(evictionMap.get(i));
+            assertEquals(expected + j, evictionMap.get(j));
+        }
+        log.info('\n' + "megaBytesBefore = " + megaBytesBefore + '\n'
+                + "megaBytesAfterPopulating = " + megaBytesAfterPopulating + '\n'
+                + "megaBytesAfterEviction = " + megaBytesAfterEviction);
+    }
+
+    @Test
+    void rarelyPutAndFrequentGet() throws InterruptedException {
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        batchSize = batchSize/10;
+        for (int i = 0; i < batchSize; i++) {
+            evictionMap.put(i, expected + i);
+            for (int j = 0; j < 100; j++) {
+                evictionMap.get(i);
+            }
+        }
+
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        Thread.sleep(lifeTimeMillis);
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+
+        for (int i = 0; i < batchSize; i++) {
+            int j = i + batchSize;
+            evictionMap.put(j, expected + j);
+
+            assertNull(evictionMap.get(i));
+            assertEquals(expected + j, evictionMap.get(j));
+        }
+        log.info('\n' + "megaBytesBefore = " + megaBytesBefore + '\n'
+                + "megaBytesAfterPopulating = " + megaBytesAfterPopulating + '\n'
+                + "megaBytesAfterEviction = " + megaBytesAfterEviction);
+    }
+
 }

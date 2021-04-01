@@ -1,10 +1,10 @@
-package com.atanava.evictionmap;
+package com.atanava.evictionmap.helpers;
 
 import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TimingExtension  implements
+public class TimingExtension implements
         BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
 
     private static final Logger log = LoggerFactory.getLogger("result");

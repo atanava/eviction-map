@@ -28,6 +28,7 @@ public class TheadSafeEvictionMap<K, V> extends AbstractEvictionMap<K, V> {
     }
 
     @Override
-    protected void evictIfNeeded() {}
+    protected void evictIfNeeded() {
+    }
 
 }

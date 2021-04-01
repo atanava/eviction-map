@@ -7,6 +7,7 @@ class GuavaCacheEvictionMapTest extends EvictionMapAbstractTest {
     @BeforeEach
     void init() {
         evictionMap = factory.getEvictionMap(MapType.GUAVA, lifeTimeMillis);
+        runtime.gc();
     }
 
 }

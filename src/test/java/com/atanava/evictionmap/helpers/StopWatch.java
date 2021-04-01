@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.atanava.evictionmap;
+package com.atanava.evictionmap.helpers;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;

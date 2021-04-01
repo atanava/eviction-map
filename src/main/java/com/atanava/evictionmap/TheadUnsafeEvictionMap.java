@@ -10,6 +10,8 @@ public class TheadUnsafeEvictionMap<K, V> extends AbstractEvictionMap<K, V> {
 
     @Override
     protected void evictIfNeeded() {
-        evictCache();
+        if (keysByAddingOrder.size() >= batchSize) {
+            evictCache();
+        }
     }
 }

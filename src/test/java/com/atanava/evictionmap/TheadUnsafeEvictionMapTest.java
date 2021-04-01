@@ -7,6 +7,7 @@ class TheadUnsafeEvictionMapTest extends EvictionMapAbstractTest {
     @BeforeEach
     void init() {
         evictionMap = factory.getEvictionMap(MapType.THREAD_UNSAFE, lifeTimeMillis);
+        runtime.gc();
     }
 
 }

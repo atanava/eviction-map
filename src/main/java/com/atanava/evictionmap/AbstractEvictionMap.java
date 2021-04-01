@@ -13,6 +13,9 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
     protected final long entryLifeTime;
     protected volatile int batchSize;
     protected final AtomicReference<Date> lastEvicted;
+    private volatile boolean useGC;
+    private final Runtime runtime;
+
 
     protected AbstractEvictionMap(Map<K, CompositeValue> innerMap, Deque<CompositeKey> keysByAddingOrder,
                                   long entryLifeTime) {
@@ -21,6 +24,8 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
         this.entryLifeTime = entryLifeTime;
         this.batchSize = 1000;
         this.lastEvicted = new AtomicReference<>(new Date());
+        this.useGC = true;
+        this.runtime = Runtime.getRuntime();
     }
 
     public int getBatchSize() {
@@ -29,6 +34,14 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
 
     public void setBatchSize(int batchSize) {
         this.batchSize = batchSize;
+    }
+
+    public boolean isUseGC() {
+        return useGC;
+    }
+
+    public void setUseGC(boolean useGC) {
+        this.useGC = useGC;
     }
 
     @Override
@@ -74,6 +87,9 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
             }
 
             lastEvicted.set(new Date());
+            if (useGC) {
+                runtime.gc();
+            }
         }
     }
 
