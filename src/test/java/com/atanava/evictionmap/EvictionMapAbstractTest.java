@@ -10,11 +10,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(TimingExtension.class)
-abstract class AbstractEvictionMapTest {
+abstract class EvictionMapAbstractTest {
 
+    protected EvictionMapFactory<Integer, String> factory = new EvictionMapFactory<>();
     protected EvictionMap<Integer, String> evictionMap;
     protected long lifeTimeMillis = 10_000;
-    protected String expected = "Item ";;
+    protected String expected = "Item ";
 
     @Test
     void putAndGetOnce() throws InterruptedException {
@@ -32,7 +33,7 @@ abstract class AbstractEvictionMapTest {
 
         for (int i = 0; i < batchSize; i++) {
             evictionMap.put(i, expected + i);
-            timeMap.put(i, new Date());
+            timeMap.put(i, new Date()); //Time of this Date is approximate, accuracy depends on how EvictionMap works
         }
 
         Thread.sleep(lifeTimeMillis);

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class GuavaCacheEvictionMap<K, V> implements EvictionMap<K, V> {
     private final Cache<K, V> cache;
 
-    public GuavaCacheEvictionMap(long entryLifeTime) {
+    protected GuavaCacheEvictionMap(long entryLifeTime) {
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(entryLifeTime, TimeUnit.MILLISECONDS)
                 .build();

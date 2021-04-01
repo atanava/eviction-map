@@ -2,12 +2,11 @@ package com.atanava.evictionmap;
 
 import org.junit.jupiter.api.BeforeEach;
 
-class GuavaCacheEvictionMapTest extends AbstractEvictionMapTest {
+class GuavaCacheEvictionMapTest extends EvictionMapAbstractTest {
 
     @BeforeEach
     void init() {
-        evictionMap = new GuavaCacheEvictionMap<>(lifeTimeMillis);
+        evictionMap = factory.getEvictionMap(MapType.GUAVA, lifeTimeMillis);
     }
-
 
 }
