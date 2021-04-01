@@ -31,15 +31,15 @@ abstract class EvictionMapAbstractTest {
 
     @Test
     void frequentPutAndGet() throws InterruptedException {
-        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
         for (int i = 0; i < batchSize; i++) {
             evictionMap.put(i, expected + i);
             evictionMap.get(i);
         }
 
-        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
         Thread.sleep(lifeTimeMillis);
-        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
 
         for (int i = 0; i < batchSize; i++) {
             int j = i + batchSize;
@@ -55,14 +55,14 @@ abstract class EvictionMapAbstractTest {
 
     @Test
     void frequentPutAndRarelyGet() throws InterruptedException {
-        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
         for (int i = 0; i < batchSize; i++) {
             evictionMap.put(i, expected + i);
         }
 
-        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
         Thread.sleep(lifeTimeMillis);
-        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
 
         for (int i = 0; i < batchSize; i++) {
             int j = i + batchSize;
@@ -78,8 +78,8 @@ abstract class EvictionMapAbstractTest {
 
     @Test
     void rarelyPutAndFrequentGet() throws InterruptedException {
-        long megaBytesBefore = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
-        batchSize = batchSize/10;
+        long megaBytesBefore = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
+        batchSize = batchSize / 10;
         for (int i = 0; i < batchSize; i++) {
             evictionMap.put(i, expected + i);
             for (int j = 0; j < 100; j++) {
@@ -87,9 +87,9 @@ abstract class EvictionMapAbstractTest {
             }
         }
 
-        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterPopulating = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
         Thread.sleep(lifeTimeMillis);
-        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / 1048576;
+        long megaBytesAfterEviction = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
 
         for (int i = 0; i < batchSize; i++) {
             int j = i + batchSize;
