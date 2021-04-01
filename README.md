@@ -46,22 +46,22 @@ or the most recent replacement of the value. Specify duration as EvictionMap con
 - Logback
 - SLF4J
 
-### Decisions and implementations
+### Implementations
 
 * Created interface `EvictionMap` for polymorphism that allows us to use different implementations
 * Created implementation based on Google Guava Cache for productivity comparsions
 * Implemented business logic in `AbstractEvictionMap` abstract class.  
   This class contains:   
   2 nested classes named as `CompositeKey` and `CompositeValue` which in turn contain `K` key and `V` value with own timestamps,  
-  2 collections which present via interfaces : first one is a Map of `K` keys and `CompositeValue`, second is a Deque of `CompositeKey`
+  2 collections which present via interfaces : first one is a Map of `K` keys and `CompositeValue`, second is a Deque of `CompositeKey`  
   Deque helps us to get first-added (oldest) keys very fast without searching in all Map for it.
   Method `evictCache` matches timestamps of `CompositeKey`'s and value of `entryLifeTime` variable 
   and does evictions from Map and Deque. 
   If variable `useGC` is "true", then also invokes `runtime.gc()` which offer Garbage Collector to start cleaning and release the memory from evicted objects.
   Variable `batchSize` defines the size of map from which to start eviction.
-* Created `TheadUnsafeEvictionMap` implementation which uses thread unsafe collections aka `HashMap` and `LinkedList`.
+* Created `TheadUnsafeEvictionMap` implementation which uses thread unsafe collections aka `HashMap` and `LinkedList`.  
   This implementation does evictions in its own thread and consumes fewer size of memory.
-* Created `TheadSafeEvictionMap` implementation which uses thread safe collections aka `ConcurrentHashMap` and `ConcurrentLinkedDeque`.
+* Created `TheadSafeEvictionMap` implementation which uses thread safe collections aka `ConcurrentHashMap` and `ConcurrentLinkedDeque`.  
   This implementation creates and starts a separate daemon thread which does evictions.
 * Created factory class `EvictionMapFactory` which helps us to choose and create instances of necessary implementation easier.
 
