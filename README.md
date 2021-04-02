@@ -67,6 +67,7 @@ or the most recent replacement of the value. Specify duration as EvictionMap con
 
 ### Tests
 If you want to get more accurate measurement values of memory consumption, start the test classes separately from Maven,   
-because it seems that the garbage collector, which could run before each test, in this case works better.  
-And also you will receive pretty prints from the logger.
+because it seems that the garbage collector, which could run before each test, in this case works better (tested with openjdk-15.0.2_linux-x64).  
+And also you will receive pretty prints from the logger.  
+Cast your EvictionMap instance to AbstractEvictionMap or its inheritor if you want to use specific methods such as `setUseGC` and `setBatchSize`
   

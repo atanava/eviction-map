@@ -13,7 +13,6 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
     protected final long entryLifeTime;
     protected volatile int batchSize;
     protected final AtomicReference<Date> lastEvicted;
-    private volatile boolean useGC;
     private final Runtime runtime;
 
 
@@ -24,7 +23,6 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
         this.entryLifeTime = entryLifeTime;
         this.batchSize = 1000;
         this.lastEvicted = new AtomicReference<>(new Date());
-        this.useGC = true;
         this.runtime = Runtime.getRuntime();
     }
 
@@ -34,14 +32,6 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
 
     public void setBatchSize(int batchSize) {
         this.batchSize = batchSize;
-    }
-
-    public boolean isUseGC() {
-        return useGC;
-    }
-
-    public void setUseGC(boolean useGC) {
-        this.useGC = useGC;
     }
 
     @Override
@@ -70,12 +60,11 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
     protected abstract void evictIfNeeded();
 
     protected void evictCache() {
-
-        if ((new Date().getTime() - lastEvicted.get().getTime()) >= entryLifeTime) {
+        Date now = new Date();
+        if ((now.getTime() - lastEvicted.get().getTime()) >= entryLifeTime) {
             Iterator<CompositeKey> iterator = keysByAddingOrder.iterator();
             while (iterator.hasNext()) {
                 CompositeKey next = iterator.next();
-                Date now = new Date();
                 if ((now.getTime() - next.inserted.getTime()) >= entryLifeTime) {
                     iterator.remove();
 
@@ -86,10 +75,7 @@ public abstract class AbstractEvictionMap<K, V> implements EvictionMap<K, V> {
                 } else break;
             }
 
-            lastEvicted.set(new Date());
-            if (useGC) {
-                runtime.gc();
-            }
+            lastEvicted.set(now);
         }
     }
 
